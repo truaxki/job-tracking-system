@@ -1,5 +1,7 @@
 import os
+# PDFProcessor: Input: PDF file path (str) -> Output: List[str] of LLaMA responses with XML tags
 from pdf_processor import PDFProcessor
+# XMLProcessor: Input: LLaMA response text (str) -> Output: List[Dict] of structured tag data
 from xml_processor import XMLProcessor
 
 def process_resume(pdf_path: str, save_images: bool = False) -> None:
