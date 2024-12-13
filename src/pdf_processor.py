@@ -61,7 +61,62 @@ class PDFProcessor:
         """
         try:
             if prompt is None:
-                prompt = "Please analyze this resume image and provide a detailed summary of the professional experience, skills, and qualifications shown:"
+                prompt = """Please analyze this resume image and provide the information in the following XML format. Include all dates, skills, and experiences you can find:'
+
+<?xml version="1.0" encoding="UTF-8"?>
+<resume>
+    <personalInfo>
+        <name></name>
+        <title></title>
+        <contact></contact>
+        <location></location>
+    </personalInfo>
+    
+    <skills>
+        <technicalSkills>
+            <skill name="" proficiency="" yearsExperience=""/>
+        </technicalSkills>
+        <softSkills>
+            <skill name="" context=""/>
+        </softSkills>
+        <domainExpertise>
+            <domain name="" yearsExperience=""/>
+        </domainExpertise>
+    </skills>
+    
+    <experience>
+        <position>
+            <company></company>
+            <title></title>
+            <duration></duration>
+            <responsibilities></responsibilities>
+            <technologiesUsed>
+                <tech name="" context=""/>
+            </technologiesUsed>
+            <achievements></achievements>
+        </position>
+    </experience>
+    
+    <education>
+        <degree>
+            <institution></institution>
+            <major></major>
+            <minor></minor>
+            <graduation></graduation>
+            <relevantCourses></relevantCourses>
+        </degree>
+    </education>
+    
+    <certifications>
+        <certification>
+            <name></name>
+            <issuer></issuer>
+            <date></date>
+        </certification>
+    </certifications>
+</resume>
+
+Please fill in all relevant fields based on the resume image, maintaining the XML structure."""
 
             # Process through Ollama
             response = ollama.chat(
