@@ -1,28 +1,12 @@
 # PDF Processing
-PyPDF2>=3.0.0
-pdf2image>=1.16.3
-
-# OCR and Image Processing
-pytesseract>=0.3.10
+PyMuPDF>=1.23.0
 Pillow>=10.0.0
 
 # LLM Integration
-transformers>=4.35.0
 torch>=2.0.0
+transformers>=4.35.0
 accelerate>=0.24.0
 
-# XML Processing
-lxml>=4.9.3
-xmltodict>=0.13.0
-
-# File Management
-python-magic>=0.4.27
-pathlib>=1.0.1
-
 # Utilities
-tqdm>=4.66.1
 python-dotenv>=1.0.0
-
-# Knowledge Graph
-networkx>=3.1
-matplotlib>=3.7.1
+pathlib>=1.0.1
