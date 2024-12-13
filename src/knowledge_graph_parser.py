@@ -81,6 +81,12 @@ class KnowledgeGraphParser:
                 }]
             )
             
+            # Print raw LLaMA output for debugging
+            print("\nRaw LLaMA Output:")
+            print("-" * 80)
+            print(response['message']['content'])
+            print("-" * 80)
+            
             return response['message']['content']
             
         except Exception as e:
@@ -89,13 +95,14 @@ class KnowledgeGraphParser:
 
     def extract_entities_and_relations(self, llama_analysis: str) -> Tuple[List[Dict], List[Dict]]:
         """Extract entities and relations from LLaMA's analysis"""
-        # This is a placeholder - we'll need to implement proper parsing of LLaMA's output
-        entities = []
-        relations = []
+        # For now, just print the analysis we're trying to parse
+        print("\nAttempting to parse entities and relations from:")
+        print("-" * 80)
+        print(llama_analysis)
+        print("-" * 80)
         
-        # Here we'll add logic to parse LLaMA's output into structured entities and relations
-        # For now, returning empty lists
-        return entities, relations
+        # Return empty lists for now
+        return [], []
 
     def create_knowledge_graph(self, xml_content: str) -> Tuple[List[Dict], List[Dict]]:
         """Create a knowledge graph from XML resume content"""
@@ -116,7 +123,17 @@ def main():
     # Example usage
     xml_content = """<?xml version="1.0" encoding="UTF-8"?>
     <resume>
-        <!-- Example XML content here -->
+        <personalInfo>
+            <name>Kirk F Truax</name>
+            <title>Software Development Apprentice</title>
+        </personalInfo>
+        <experience>
+            <position>
+                <company>Creating Coding Careers</company>
+                <title>Software Development Apprentice</title>
+                <duration>February 2024 - August 2024</duration>
+            </position>
+        </experience>
     </resume>
     """
     
@@ -124,14 +141,7 @@ def main():
     
     try:
         entities, relations = parser.create_knowledge_graph(xml_content)
-        print("\nExtracted Entities:")
-        for entity in entities:
-            print(entity)
         
-        print("\nExtracted Relations:")
-        for relation in relations:
-            print(relation)
-    
     except Exception as e:
         print(f'Error in main: {e}')
 
