@@ -1,29 +1,28 @@
 import os
 from pathlib import Path
 from typing import List
+import requests
+import json
 
 import fitz  # PyMuPDF
 from PIL import Image
-import torch
-from transformers import pipeline
+import base64
+from io import BytesIO
 
 class PDFProcessor:
-    def __init__(self, model_name: str = 'meta-llama/Llama-2-70b-chat-hf'):
-        """Initialize the PDF processor with LLaMA model.
+    def __init__(self, ollama_url: str = 'http://localhost:11434'):
+        """Initialize the PDF processor with Ollama URL.
         
         Args:
-            model_name (str): Name of the LLaMA model to use
+            ollama_url (str): URL of the Ollama service
         """
-        self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        try:
-            self.vision_model = pipeline(
-                'image-to-text',
-                model=model_name,
-                device=self.device
-            )
-        except Exception as e:
-            print(f'Error loading LLaMA model: {e}')
-            raise
+        self.ollama_url = ollama_url
+
+    def image_to_base64(self, image: Image.Image) -> str:
+        """Convert PIL Image to base64 string."""
+        buffered = BytesIO()
+        image.save(buffered, format="PNG")
+        return base64.b64encode(buffered.getvalue()).decode('utf-8')
 
     def pdf_to_images(self, pdf_path: str, output_dir: str = None) -> List[Path]:
         """Convert PDF pages to images.
@@ -67,8 +66,42 @@ class PDFProcessor:
             print(f'Error converting PDF to images: {e}')
             raise
 
+    def process_image_with_ollama(self, image: Image.Image) -> str:
+        """Process a single image through Ollama's LLaMA model.
+        
+        Args:
+            image (PIL.Image): Image to process
+            
+        Returns:
+            str: Generated text from the image
+        """
+        try:
+            # Convert image to base64
+            base64_image = self.image_to_base64(image)
+            
+            # Prepare the request to Ollama
+            endpoint = f"{self.ollama_url}/api/generate"
+            payload = {
+                "model": "llama2-32k",  # or whichever model version you're using
+                "prompt": "Please analyze this resume image and provide a detailed summary:",
+                "stream": False,
+                "images": [base64_image]
+            }
+            
+            # Make the request
+            response = requests.post(endpoint, json=payload)
+            response.raise_for_status()
+            
+            # Parse the response
+            result = response.json()
+            return result.get('response', '')
+            
+        except Exception as e:
+            print(f'Error processing image through Ollama: {e}')
+            raise
+
     def process_images(self, image_paths: List[Path]) -> List[str]:
-        """Process images through LLaMA vision model.
+        """Process images through Ollama's LLaMA model.
         
         Args:
             image_paths (List[Path]): List of paths to images or PIL Image objects
@@ -87,14 +120,14 @@ class PDFProcessor:
                     # Use PIL Image directly
                     image = img
                     
-                # Process through LLaMA
-                text = self.vision_model(image)
+                # Process through Ollama
+                text = self.process_image_with_ollama(image)
                 results.append(text)
                 
             return results
             
         except Exception as e:
-            print(f'Error processing images through LLaMA: {e}')
+            print(f'Error processing images through Ollama: {e}')
             raise
 
     def process_pdf(self, pdf_path: str, save_images: bool = False) -> List[str]:
@@ -116,7 +149,7 @@ class PDFProcessor:
             # Convert PDF to images
             images = self.pdf_to_images(pdf_path, output_dir)
 
-            # Process images through LLaMA
+            # Process images through Ollama
             results = self.process_images(images)
 
             return results
