@@ -1,30 +1,24 @@
-from xml_extractor import XMLExtractor
+from xml_extractor import XMLExtractor, clean_llama_output
 
-def test_llama_output(file_path: str):
-    # Read the LLaMA output file
-    with open(file_path, 'r', encoding='utf-8') as f:
-        content = f.read()
-    
-    # Extract the response section
-    response_section = content.split('=== Response ===')[-1].strip()
-    
-    # Create extractor
+def test_xml_extraction(xml_content: str):
     extractor = XMLExtractor()
+    print("\nExtracting XML tags...")
+    tags = extractor.extract_all_tags(xml_content)
     
-    print("\n1. Flat tag extraction:")
-    tags = extractor.extract_all_tags(response_section)
-    extractor.print_extracted_tags(tags)
-    
-    print("\n2. Nested structure extraction:")
-    nested = extractor.extract_nested_tags(response_section)
-    extractor.print_nested_structure(nested)
+    print("\nFound XML Structure:")
+    print("=" * 80)
+    extractor.print_tag_structure(tags)
+    print("=" * 80)
 
 def main():
-    # Path to your LLaMA output file
+    # Test with LLaMA output file
     file_path = r'C:\Users\ktrua\anthropic_test\job-tracking-system\llama_outputs\llama_output_20241213_120645.txt'
     
-    print("Starting XML extraction from LLaMA output...")
-    test_llama_output(file_path)
+    # Clean and extract XML content from LLaMA output
+    xml_content = clean_llama_output(file_path)
+    
+    # Test extraction
+    test_xml_extraction(xml_content)
 
 if __name__ == '__main__':
     main()
