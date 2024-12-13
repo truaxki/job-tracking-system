@@ -2,37 +2,58 @@
 
 A comprehensive system for managing and tracking job applications throughout the hiring process.
 
-## Features
+## Design Philosophy
 
-- Track job applications and their current status
-- Store important details about each application
-- Monitor application progress
-- Generate insights about your job search
+This project follows a modular design approach with clear separation of concerns:
+
+1. **PDF Processing Module**
+   - Handles PDF document processing
+   - Integrates with LLaMA 3.2 Vision via Ollama
+   - Extracts structured content with XML tags
+   - Input: PDF file path -> Output: Tagged content
+
+2. **XML Processing Module**
+   - Processes LLaMA-generated XML content
+   - Extracts and validates tag structure
+   - Maintains hierarchical relationships
+   - Input: Tagged text -> Output: Structured tag data
+
+3. **Graph Processing Module** (Planned)
+   - Transforms structured data into knowledge graph
+   - Defines nodes and relationships
+   - Enables query and analysis capabilities
+   - Input: Structured tag data -> Output: Graph database
+
+Each module has a single responsibility and clear interfaces, making the system maintainable and extensible.
 
 ## Technology Stack
 
 - Frontend: React.js
 - Backend: Node.js/Express
 - Database: MongoDB
-- Authentication: JWT
+- LLM Integration: Ollama with LLaMA 3.2 Vision
+- Graph Database: (TBD)
 
 ## Project Structure
 
 ```
 job-tracking-system/
-├── client/              # Frontend React application
-├── server/              # Backend Node.js application
-├── docs/                # Documentation
-└── README.md           # This file
+├── src/
+│   ├── pdf_processor.py    # PDF processing and LLaMA integration
+│   ├── xml_processor.py    # XML extraction and structuring
+│   ├── graph_processor.py  # Knowledge graph creation (planned)
+│   └── main.py            # Application entry point
+├── docs/                  # Documentation
+└── README.md             # This file
 ```
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js (v14 or higher)
-- npm or yarn
-- MongoDB
+- Python 3.8+
+- Ollama with LLaMA 3.2 Vision model
+- PDF processing libraries
 
 ### Installation
 
@@ -44,7 +65,7 @@ job-tracking-system/
 2. Install dependencies:
    ```bash
    cd job-tracking-system
-   npm install
+   pip install -r requirements.txt
    ```
 
 ## Contributing
