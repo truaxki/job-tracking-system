@@ -1,30 +1,20 @@
 import os
 from pathlib import Path
 from typing import List
-import requests
-import json
-
+import ollama
 import fitz  # PyMuPDF
 from PIL import Image
-import base64
-from io import BytesIO
 
 class PDFProcessor:
-    def __init__(self, ollama_url: str = 'http://localhost:11434'):
-        """Initialize the PDF processor with Ollama URL.
+    def __init__(self, model_name: str = 'llama3.2-vision'):
+        """Initialize the PDF processor with Ollama model name.
         
         Args:
-            ollama_url (str): URL of the Ollama service
+            model_name (str): Name of the Ollama model to use
         """
-        self.ollama_url = ollama_url
+        self.model_name = model_name
 
-    def image_to_base64(self, image: Image.Image) -> str:
-        """Convert PIL Image to base64 string."""
-        buffered = BytesIO()
-        image.save(buffered, format="PNG")
-        return base64.b64encode(buffered.getvalue()).decode('utf-8')
-
-    def pdf_to_images(self, pdf_path: str, output_dir: str = None) -> List[Path]:
+    def pdf_to_images(self, pdf_path: str, output_dir: str = None) -> List[str]:
         """Convert PDF pages to images.
         
         Args:
@@ -32,7 +22,7 @@ class PDFProcessor:
             output_dir (str, optional): Directory to save images
             
         Returns:
-            List[Path]: List of paths to generated images
+            List[str]: List of paths to generated images
         """
         if output_dir:
             Path(output_dir).mkdir(parents=True, exist_ok=True)
@@ -47,18 +37,11 @@ class PDFProcessor:
                 # Get page as image
                 pix = page.get_pixmap(matrix=fitz.Matrix(300/72, 300/72))
                 
-                # Convert to PIL Image
-                img = Image.frombytes('RGB', [pix.width, pix.height], pix.samples)
-                
-                # Save image if output_dir provided
-                if output_dir:
-                    img_path = Path(output_dir) / f'page_{page_num + 1}.png'
-                    img.save(img_path)
-                    image_paths.append(img_path)
-                else:
-                    # Store in memory
-                    img_path = img  # Store PIL Image object directly
-                    image_paths.append(img_path)
+                # Save image
+                img_path = os.path.join(output_dir if output_dir else os.path.dirname(pdf_path),
+                                       f'page_{page_num + 1}.png')
+                pix.save(img_path)
+                image_paths.append(img_path)
                     
             return image_paths
             
@@ -66,45 +49,41 @@ class PDFProcessor:
             print(f'Error converting PDF to images: {e}')
             raise
 
-    def process_image_with_ollama(self, image: Image.Image) -> str:
+    def process_image(self, image_path: str, prompt: str = None) -> str:
         """Process a single image through Ollama's LLaMA model.
         
         Args:
-            image (PIL.Image): Image to process
+            image_path (str): Path to the image file
+            prompt (str): Optional custom prompt
             
         Returns:
             str: Generated text from the image
         """
         try:
-            # Convert image to base64
-            base64_image = self.image_to_base64(image)
+            if prompt is None:
+                prompt = "Please analyze this resume image and provide a detailed summary of the professional experience, skills, and qualifications shown:"
+
+            # Process through Ollama
+            response = ollama.chat(
+                model=self.model_name,
+                messages=[{
+                    'role': 'user',
+                    'content': prompt,
+                    'images': [image_path]
+                }]
+            )
             
-            # Prepare the request to Ollama
-            endpoint = f"{self.ollama_url}/api/generate"
-            payload = {
-                "model": "llama2-32k",  # or whichever model version you're using
-                "prompt": "Please analyze this resume image and provide a detailed summary:",
-                "stream": False,
-                "images": [base64_image]
-            }
-            
-            # Make the request
-            response = requests.post(endpoint, json=payload)
-            response.raise_for_status()
-            
-            # Parse the response
-            result = response.json()
-            return result.get('response', '')
+            return response['message']['content']
             
         except Exception as e:
             print(f'Error processing image through Ollama: {e}')
             raise
 
-    def process_images(self, image_paths: List[Path]) -> List[str]:
-        """Process images through Ollama's LLaMA model.
+    def process_images(self, image_paths: List[str]) -> List[str]:
+        """Process multiple images through Ollama's LLaMA model.
         
         Args:
-            image_paths (List[Path]): List of paths to images or PIL Image objects
+            image_paths (List[str]): List of paths to images
             
         Returns:
             List[str]: Generated text for each image
@@ -112,16 +91,8 @@ class PDFProcessor:
         results = []
         
         try:
-            for img in image_paths:
-                if isinstance(img, Path):
-                    # Load image from path
-                    image = Image.open(img)
-                else:
-                    # Use PIL Image directly
-                    image = img
-                    
-                # Process through Ollama
-                text = self.process_image_with_ollama(image)
+            for img_path in image_paths:
+                text = self.process_image(img_path)
                 results.append(text)
                 
             return results
@@ -160,7 +131,7 @@ class PDFProcessor:
 
 def main():
     # Example usage
-    pdf_path = 'path/to/your/resume.pdf'
+    pdf_path = r'C:\Users\ktrua\anthropic_test\temp files\20241106 Kirk Truax Palantir.pdf'
     processor = PDFProcessor()
     
     try:
