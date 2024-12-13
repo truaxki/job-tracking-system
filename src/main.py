@@ -1,55 +1,41 @@
+import os
 from pdf_processor import PDFProcessor
-from knowledge_graph_parser import KnowledgeGraphParser
+from xml_processor import XMLProcessor
 
-def process_resume(pdf_path: str, save_images: bool = False):
-    """Process a resume PDF and create a knowledge graph"""
+def process_resume(pdf_path: str, save_images: bool = False) -> None:
+    """Process a resume PDF and extract structured information.
+
+    Args:
+        pdf_path (str): Path to the PDF file
+        save_images (bool): Whether to save intermediate images
+    """
     try:
         # Initialize processors
         pdf_processor = PDFProcessor()
-        graph_parser = KnowledgeGraphParser()
+        xml_processor = XMLProcessor()
         
-        # Process PDF to XML
-        print("\nProcessing PDF...")
-        xml_results = pdf_processor.process_pdf(pdf_path, save_images)
+        # Process PDF and get LLaMA output
+        print("Processing PDF...")
+        results = pdf_processor.process_pdf(pdf_path, save_images)
         
-        # Process each page
-        all_entities = []
-        all_relations = []
-        
-        for i, xml_content in enumerate(xml_results, 1):
-            print(f"\nAnalyzing page {i}...")
+        # Process each page's XML content
+        for i, content in enumerate(results, 1):
+            print(f"\nAnalyzing page {i}:")
+            xml_content = xml_processor.extract_xml_from_text(content)
             
-            # Create knowledge graph
-            entities, relations = graph_parser.create_knowledge_graph(xml_content)
-            
-            # Accumulate results
-            all_entities.extend(entities)
-            all_relations.extend(relations)
-        
-        # Print results
-        print("\nExtracted Entities:")
-        for entity in all_entities:
-            print(entity)
-        
-        print("\nExtracted Relations:")
-        for relation in all_relations:
-            print(relation)
-        
-        return all_entities, all_relations
-        
+            if xml_content:
+                tags = xml_processor.extract_tags(xml_content)
+                xml_processor.format_tag_output(tags)
+            else:
+                print("No valid XML content found in LLaMA output")
+                
     except Exception as e:
         print(f'Error processing resume: {e}')
-        raise
 
 def main():
     # Example usage
     pdf_path = r'C:\Users\ktrua\anthropic_test\temp files\20241106 Kirk Truax Palantir.pdf'
-    
-    try:
-        entities, relations = process_resume(pdf_path, save_images=True)
-        
-    except Exception as e:
-        print(f'Error in main: {e}')
+    process_resume(pdf_path, save_images=True)
 
 if __name__ == '__main__':
     main()
