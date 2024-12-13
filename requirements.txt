@@ -2,10 +2,8 @@
 PyMuPDF>=1.23.0
 Pillow>=10.0.0
 
-# LLM Integration
-torch>=2.0.0
-transformers>=4.35.0
-accelerate>=0.24.0
+# API Requests
+requests>=2.31.0
 
 # Utilities
 python-dotenv>=1.0.0
